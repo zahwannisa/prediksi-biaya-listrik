@@ -59,7 +59,6 @@ Aplikasi akan terbuka di browser pada `http://localhost:8501`
 ├── energy_consumption_modified.csv     # Dataset
 ├── requirements.txt                    # Dependencies
 ├── README.md                           # File ini
-├── Prediksi Biaya Listrik.ipynb        # Notebook analisis & training
 └── .streamlit/
     └── config.toml                     # Konfigurasi tema Streamlit
 ```
