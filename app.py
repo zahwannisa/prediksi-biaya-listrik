@@ -254,6 +254,22 @@ elif halaman == "📊 Prediksi":
     
     st.markdown("---")
     
+    # Info Rentang Data
+    st.markdown("""
+    <div class="info-card">
+        <h3>📋 Informasi Rentang Data</h3>
+        <p>Berikut adalah rentang nilai dari dataset yang digunakan untuk melatih model:</p>
+        <ul>
+            <li><b>Luas Bangunan:</b> 17 - 77 m² (nilai yang tersedia: 17, 24, 45, 52, 77)</li>
+            <li><b>Jumlah Penghuni:</b> 1 - 4 orang</li>
+            <li><b>Biaya Listrik:</b> $52.56 - $158.14 per bulan</li>
+        </ul>
+        <p><i>Gunakan rentang ini sebagai acuan untuk input yang optimal.</i></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
     # Input Data (centered)
     col_left, col_center, col_right = st.columns([1, 2, 1])
     
@@ -276,16 +292,16 @@ elif halaman == "📊 Prediksi":
             "Luas Bangunan (m²)",
             min_value=0.0,
             max_value=1000.0,
-            value=100.0,
-            step=10.0,
+            value=0.0,
+            step=1.0,
             help="Masukkan luas bangunan dalam meter persegi"
         )
         
         jumlah_penghuni = st.number_input(
             "Jumlah Penghuni",
-            min_value=1,
+            min_value=0,
             max_value=20,
-            value=4,
+            value=0,
             step=1,
             help="Masukkan jumlah orang yang tinggal"
         )
@@ -293,87 +309,91 @@ elif halaman == "📊 Prediksi":
         prediksi_button = st.button("Prediksi Biaya Listrik", type="primary", use_container_width=True)
         
         if prediksi_button:
-            # Lakukan prediksi
-            input_data = pd.DataFrame({
-                'Tipe_Customer': [tipe_customer],
-                'Region': [region],
-                'Luas_Bangunan_m2': [luas_bangunan],
-                'Jumlah_Penghuni': [jumlah_penghuni]
-            })
-            
-            input_encoded = encoder.transform(input_data)
-            prediksi_biaya = model.predict(input_encoded)[0]
-            
-            st.markdown("---")
-            
-            # Tampilkan hasil
-            st.subheader("✅ Hasil Prediksi")
-            
-            st.markdown(f"""
-            <div class="metric-card">
-                <h2>Estimasi Biaya Listrik</h2>
-                <h1 style="font-size: 2.5em;">${prediksi_biaya:,.2f}</h1>
-                <p>per bulan</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # Visualisasi dengan number line
-            st.subheader("📈 Visualisasi Biaya Prediksi")
-            
-            min_val = df['Biaya_Listrik'].min()
-            max_val = df['Biaya_Listrik'].max()
-            
-            fig = go.Figure()
-            
-            # Garis horizontal (background bar)
-            fig.add_trace(go.Scatter(
-                x=[min_val, max_val],
-                y=[0, 0],
-                mode='lines',
-                line=dict(color='#3b82f6', width=8),
-                hoverinfo='skip'
-            ))
-            
-            # Marker untuk posisi prediksi
-            fig.add_trace(go.Scatter(
-                x=[prediksi_biaya],
-                y=[0],
-                mode='markers',
-                marker=dict(
-                    size=16,
-                    color='#f59e0b',
-                    symbol='circle',
-                    line=dict(color='white', width=2)
-                ),
-                hovertemplate=f'Prediksi: ${prediksi_biaya:,.2f}<extra></extra>'
-            ))
-            
-            fig.update_layout(
-                height=120,
-                showlegend=False,
-                xaxis=dict(
-                    title='Biaya Listrik ($)',
-                    tickprefix='$',
-                    tickformat=',.0f',
-                    range=[min_val - 10, max_val + 10]
-                ),
-                yaxis=dict(
-                    visible=False,
-                    range=[-0.5, 0.5]
-                ),
-                margin=dict(l=20, r=20, t=10, b=50)
-            )
-            
-            st.plotly_chart(fig, use_container_width=False)
-            
-            # Detail input
-            with st.expander("📋 Detail Input"):
-                st.write(f"- **Tipe Customer:** {tipe_customer}")
-                st.write(f"- **Region:** {region}")
-                st.write(f"- **Luas Bangunan:** {luas_bangunan} m²")
-                st.write(f"- **Jumlah Penghuni:** {jumlah_penghuni} orang")
+            # Validasi input
+            if luas_bangunan < 1 or jumlah_penghuni < 1:
+                st.error("⚠️ Value must be greater than or equal to 1")
+            else:
+                # Lakukan prediksi
+                input_data = pd.DataFrame({
+                    'Tipe_Customer': [tipe_customer],
+                    'Region': [region],
+                    'Luas_Bangunan_m2': [luas_bangunan],
+                    'Jumlah_Penghuni': [jumlah_penghuni]
+                })
+                
+                input_encoded = encoder.transform(input_data)
+                prediksi_biaya = model.predict(input_encoded)[0]
+                
+                st.markdown("---")
+                
+                # Tampilkan hasil
+                st.subheader("✅ Hasil Prediksi")
+                
+                st.markdown(f"""
+                <div class="metric-card">
+                    <h2>Estimasi Biaya Listrik</h2>
+                    <h1 style="font-size: 2.5em;">${prediksi_biaya:,.2f}</h1>
+                    <p>per bulan</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Visualisasi dengan number line
+                st.subheader("📈 Visualisasi Biaya Prediksi")
+                
+                min_val = df['Biaya_Listrik'].min()
+                max_val = df['Biaya_Listrik'].max()
+                
+                fig = go.Figure()
+                
+                # Garis horizontal (background bar)
+                fig.add_trace(go.Scatter(
+                    x=[min_val, max_val],
+                    y=[0, 0],
+                    mode='lines',
+                    line=dict(color='#3b82f6', width=8),
+                    hoverinfo='skip'
+                ))
+                
+                # Marker untuk posisi prediksi
+                fig.add_trace(go.Scatter(
+                    x=[prediksi_biaya],
+                    y=[0],
+                    mode='markers',
+                    marker=dict(
+                        size=16,
+                        color='#f59e0b',
+                        symbol='circle',
+                        line=dict(color='white', width=2)
+                    ),
+                    hovertemplate=f'Prediksi: ${prediksi_biaya:,.2f}<extra></extra>'
+                ))
+                
+                fig.update_layout(
+                    height=120,
+                    showlegend=False,
+                    xaxis=dict(
+                        title='Biaya Listrik ($)',
+                        tickprefix='$',
+                        tickformat=',.0f',
+                        range=[min_val - 10, max_val + 10]
+                    ),
+                    yaxis=dict(
+                        visible=False,
+                        range=[-0.5, 0.5]
+                    ),
+                    margin=dict(l=20, r=20, t=10, b=50)
+                )
+                
+                st.plotly_chart(fig, use_container_width=False)
+                
+                # Detail input
+                with st.expander("📋 Detail Input"):
+                    st.write(f"- **Tipe Customer:** {tipe_customer}")
+                    st.write(f"- **Region:** {region}")
+                    st.write(f"- **Luas Bangunan:** {luas_bangunan} m²")
+                    st.write(f"- **Jumlah Penghuni:** {jumlah_penghuni} orang")
 
 # =====================================================
 # FOOTER
